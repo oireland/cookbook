@@ -1,4 +1,4 @@
-import {Lusitana, Inter} from "next/font/google";
+import {Lusitana, Inter, Oswald} from "next/font/google";
 
 export const lusitana = Lusitana({
     subsets: ['latin'],
@@ -6,5 +6,9 @@ export const lusitana = Lusitana({
 })
 
 export const inter = Inter({
+    subsets: ['latin']
+})
+
+export const oswald = Oswald({
     subsets: ['latin']
 })

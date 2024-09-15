@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 import {inter} from '@/app/ui/fonts'
+import {ThemeProvider} from "@/components/theme-provider";
+import HeaderWithSidebar from "@/app/ui/header-with-sidenav";
+import {Toaster} from "@/components/ui/toaster";
+import {SessionProvider} from "next-auth/react";
+
 
 
 export const metadata: Metadata = {
@@ -17,9 +22,22 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.className} antialiased`}
+        className={`${inter.className} antialiased bg-background`}
       >
-        {children}
+      <SessionProvider>
+          <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+
+          >
+              <HeaderWithSidebar>
+                  {children}
+              </HeaderWithSidebar>
+              <Toaster/>
+          </ThemeProvider>
+      </SessionProvider>
+
       </body>
     </html>
   );

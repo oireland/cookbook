@@ -1,0 +1,134 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+}
+
+enum Role {
+  CREATOR
+  MEMBER
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  image         String?
+  accounts Account[]
+  sessions Session[]
+
+  emailVerified DateTime?
+  role          Role      @default(MEMBER)
+
+  kitchen   Kitchen?  @relation(fields: [kitchenId], references: [kitchenId], onDelete: SetNull)
+  kitchenId String?
+  bookings  Booking[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+}
+
+model Account {
+  userId           String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+// Note: When adding the functionality for a user to leave a kitchen, check whether the kitchen will be empty after they leave, and delete it if this is the case.
+
+model Kitchen {
+  kitchenId String @id @default(cuid())
+  name String
+  ovens     Oven[]
+  users     User[]
+  hobs      Hob[]
+}
+
+model Oven {
+  ovenId          Int    @id @default(autoincrement())
+  name            String
+  numberOfShelves Int
+  bookings OvenInBooking[]
+
+  kitchenId String
+  kitchen   Kitchen @relation(fields: [kitchenId], references: [kitchenId], onDelete: Cascade)
+}
+
+model OvenInBooking {
+  oven Oven @relation(fields: [ovenId], references: [ovenId], onDelete: Cascade)
+  ovenId    Int
+  booking Booking @relation(fields: [bookingId], references: [bookingId], onDelete: Cascade)
+  bookingId Int
+
+  // allow an oven to be shared
+  numberOfShelves Int
+  ovenTemperature Int
+
+  @@id([ovenId, bookingId])
+}
+
+model Hob {
+  hobId Int    @id @default(autoincrement())
+  name  String // e.g. Back Left
+
+  kitchenId String
+  kitchen   Kitchen @relation(fields: [kitchenId], references: [kitchenId], onDelete: Cascade)
+
+  bookings Booking[]
+}
+
+model Booking {
+  bookingId     Int      @id @default(autoincrement())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ovens OvenInBooking[]
+  startDateTime DateTime
+  endDateTime   DateTime
+  hobs          Hob[]
+  // explicit many to many OvenInBooking
+}
