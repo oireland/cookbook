@@ -31,7 +31,7 @@ model User {
   emailVerified DateTime?
   role          Role      @default(MEMBER)
 
-  kitchen   Kitchen?  @relation(fields: [kitchenId], references: [kitchenId], onDelete: SetNull)
+  kitchen   Kitchen?  @relation(fields: [kitchenId], references: [id], onDelete: SetNull)
   kitchenId String?
   bookings  Booking[]
 
@@ -82,28 +82,27 @@ model VerificationToken {
 // Note: When adding the functionality for a user to leave a kitchen, check whether the kitchen will be empty after they leave, and delete it if this is the case.
 
 model Kitchen {
-  kitchenId String @id @default(cuid())
+  id String @id @default(cuid())
+  shortCode String @unique @db.VarChar(8)
   name String
-  ovens     Oven[]
+  cookers Cooker[]
   users     User[]
-  hobs      Hob[]
 }
 
 model Oven {
-  ovenId          Int    @id @default(autoincrement())
+  id          String    @id @default(cuid())
   name            String
   numberOfShelves Int
   bookings OvenInBooking[]
-
-  kitchenId String
-  kitchen   Kitchen @relation(fields: [kitchenId], references: [kitchenId], onDelete: Cascade)
+  cookerId String
+  cooker Cooker @relation(fields: [cookerId], references: [id], onDelete: Cascade)
 }
 
 model OvenInBooking {
-  oven Oven @relation(fields: [ovenId], references: [ovenId], onDelete: Cascade)
-  ovenId    Int
-  booking Booking @relation(fields: [bookingId], references: [bookingId], onDelete: Cascade)
-  bookingId Int
+  oven Oven @relation(fields: [ovenId], references: [id], onDelete: Cascade)
+  ovenId    String
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  bookingId String
 
   // allow an oven to be shared
   numberOfShelves Int
@@ -112,23 +111,30 @@ model OvenInBooking {
   @@id([ovenId, bookingId])
 }
 
-model Hob {
-  hobId Int    @id @default(autoincrement())
-  name  String // e.g. Back Left
-
+model Cooker {
+  id String @id @default(cuid())
+  name String
   kitchenId String
-  kitchen   Kitchen @relation(fields: [kitchenId], references: [kitchenId], onDelete: Cascade)
+  kitchen Kitchen @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
 
+  burners Burner[]
+  ovens Oven[]
+}
+
+model Burner {
+  id String @id @default(cuid())
+  name String
+  cookerId String
+  cooker Cooker @relation(fields: [cookerId], references: [id], onDelete: Cascade)
   bookings Booking[]
 }
 
 model Booking {
-  bookingId     Int      @id @default(autoincrement())
+  id     String      @id @default(cuid())
   userId        String
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   ovens OvenInBooking[]
   startDateTime DateTime
   endDateTime   DateTime
-  hobs          Hob[]
-  // explicit many to many OvenInBooking
+  burners         Burner[]
 }

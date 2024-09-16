@@ -74,7 +74,7 @@ export default function HeaderWithSidebar({children}: { children: React.ReactNod
                 {showSidebar && (
                     <aside
                         className={`
-              sticky inset-y-0 left-0 top-12 lg:top-16 z-50 w-64 bg-background transform transition-transform duration-200 ease-in-out
+              fixed inset-y-0 left-0 top-12 lg:top-16 z-50 w-64 bg-background transform transition-transform duration-200 ease-in-out
               flex flex-col
               lg:sticky lg:translate-x-0 lg:h-[calc(100vh-4rem)] lg:pt-0
               ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
@@ -121,7 +121,7 @@ export default function HeaderWithSidebar({children}: { children: React.ReactNod
                 )}
 
                 {/* Main Content */}
-                <main>
+                <main className="flex-1">
                     {children}
                 </main>
 

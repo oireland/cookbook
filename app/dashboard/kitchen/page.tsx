@@ -1,7 +1,12 @@
 import React from 'react';
 import {auth} from "@/lib/auth";
 import {redirect} from "next/navigation";
-import CreateKitchenForm from "@/app/ui/dashboard/kitchen/create-kitchen-form";
+import JoinKitchenForm from "@/app/ui/dashboard/kitchen/join-kitchen-form";
+import KitchenDetails from "@/app/ui/dashboard/kitchen/kitchen-details";
+import {getKitchenDetails} from "@/lib/data";
+import InitialiseKitchenForm from "@/app/ui/dashboard/kitchen/initialise-kitchen-form";
+
+
 
 async function Page() {
     const session = await auth();
@@ -13,15 +18,25 @@ async function Page() {
     const user = session.user
 
     if (user.kitchenId) {
+
+        const details = await getKitchenDetails(user.kitchenId);
+
+
         return (
-            <div>
-                This is your kitchen id: {user.kitchenId}
-            </div>
+            <KitchenDetails details={details} userId={user.id!} isCreator={user.role === "CREATOR"}/>
         );
     }
 
-    // Create a new kitchen
-    return <CreateKitchenForm userId={user.id!}/>
+    //Join an existing kitchen --or-- create a new kitchen
+    return <div className="space-y-2 p-6 max-w-2xl mx-auto">
+        <JoinKitchenForm userId={user.id!}/>
+        <div className="flex space-x-2 items-center">
+            <hr className="w-full"/>
+            <span>or</span>
+            <hr className="w-full"/>
+        </div>
+        <InitialiseKitchenForm userId={user.id!}/>
+    </div>;
 
 }
 
