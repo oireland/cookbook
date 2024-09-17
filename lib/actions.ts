@@ -3,8 +3,12 @@
 import prisma from "@/lib/prisma";
 import {revalidatePath} from "next/cache";
 import {
-    CreateCookerFormData, CreateCookerFormSchema,
-    InitialiseKitchenFormData, InitialiseKitchenFormSchema,
+    BookBurnerFormData, BookBurnerSchema,
+    BookOvenFormData, BookOvenSchema,
+    CreateCookerFormData,
+    CreateCookerFormSchema,
+    InitialiseKitchenFormData,
+    InitialiseKitchenFormSchema,
     JoinKitchenFormData,
     JoinKitchenFormSchema
 } from "@/lib/zod-schemas";
@@ -188,8 +192,7 @@ export async function leaveKitchen(userId: string) {
         await prisma.kitchen.deleteMany({
             where: {
                 users: {
-                    none: {
-                    }
+                    none: {}
                 }
             }
         })
@@ -231,4 +234,158 @@ export async function deleteCooker(cookerId: string) {
 
     revalidatePath('/dashboard/kitchen');
     return {success: true, message: 'Successfully deleted cooker.'}
+}
+
+export async function bookOven(userId: string, formData: BookOvenFormData) {
+
+    const session = await auth();
+
+    if (!session || session.user.id !== userId || !session.user.kitchenId) {
+        return {success: false, message: "Unauthorised request."}
+    }
+
+    const validatedFields = BookOvenSchema.safeParse(formData);
+
+    if (!validatedFields.success) {
+        return {success: false, errors: validatedFields.error.flatten().fieldErrors}
+    }
+
+    const {ovenId, numberOfShelves, temperature, startDateTime, duration} = validatedFields.data
+
+    const endDateTime = new Date(startDateTime.getTime() + duration)
+
+    try {
+        // Get the number of shelves that the oven has.
+        const numberOfShelvesMax = (await prisma.oven.findUnique({
+            where: {
+                id: ovenId,
+                cooker: {
+                    kitchenId: session.user.kitchenId
+                }
+            },
+            select: {
+                numberOfShelves: true
+            }
+        }))?.numberOfShelves
+
+        // Would only occur if data not from front-end
+        if (!numberOfShelvesMax) {
+            return {success: false, message: "This oven does not exist."}
+        }
+
+        const overlappingBookings = await prisma.booking.findMany({
+            where: {
+                ovenId: ovenId,
+                startDateTime: {
+                    lt: endDateTime
+                },
+                endDateTime: {
+                    gt: startDateTime
+                }
+            },
+            select: {
+                temperature: true,
+                numberOfShelves: true,
+                oven: {
+                    select: {
+                        numberOfShelves: true,
+                    }
+                }
+            }
+        })
+
+        console.log(JSON.stringify(overlappingBookings))
+
+        // Enables an oven to be shared at the same temperature
+        let isTemperatureClash = false;
+        let totalBookedShelves = 0;
+
+        overlappingBookings.forEach(({ temperature: bookingTemp, numberOfShelves: bookingNumberOfShelves}) => {
+            console.log(bookingTemp)
+            if (bookingTemp !== temperature) isTemperatureClash = true;
+            totalBookedShelves += bookingNumberOfShelves || 0
+        })
+
+        console.log("isTempClash", isTemperatureClash)
+
+        if (isTemperatureClash || totalBookedShelves + numberOfShelves > numberOfShelvesMax) {
+            return {success: false, message: "There is an existing booking which clashes.", isClash: true}
+        }
+
+        // Create the booking
+        await prisma.booking.create({
+            data: {
+                ovenId: ovenId,
+                startDateTime: startDateTime,
+                endDateTime: endDateTime,
+                numberOfShelves: numberOfShelves,
+                temperature: temperature,
+                userId: session.user.id
+            }
+        })
+
+    } catch (e) {
+        console.log(e)
+        return {success: false, message: 'Something went wrong.'}
+    }
+
+    revalidatePath('/dashboard/bookings/bookOven')
+    return {success: true, message: 'Successfully booked oven.'}
+
+}
+
+export async function bookBurner(userId: string, formData: BookBurnerFormData) {
+    const session = await auth();
+
+    if (!session || session.user.id !== userId || !session.user.kitchenId) {
+        return {success: false, message: "Unauthorised request."}
+    }
+
+    const validatedFields = BookBurnerSchema.safeParse(formData);
+
+    if (!validatedFields.success) {
+        return {success: false, errors: validatedFields.error.flatten().fieldErrors}
+    }
+
+    const {burnerId, startDateTime, duration} = validatedFields.data
+
+    const endDateTime = new Date(startDateTime.getTime() + duration)
+
+
+    try {
+
+        const overlappingBookings = await prisma.booking.findMany({
+            where: {
+                burnerId: burnerId,
+                startDateTime: {
+                    lt: endDateTime
+                },
+                endDateTime: {
+                    gt: startDateTime
+                }
+            },
+        })
+
+        if (overlappingBookings.length > 0) {
+            return {success: false, message: "There is an existing booking which clashes.", isClash: true}
+        }
+
+        // Create the booking
+        await prisma.booking.create({
+            data: {
+                burnerId: burnerId,
+                startDateTime: startDateTime,
+                endDateTime: endDateTime,
+                userId: session.user.id
+            }
+        })
+
+    } catch (e) {
+        console.log(e)
+        return {success: false, message: 'Something went wrong.'}
+    }
+
+    revalidatePath('/dashboard/bookings/bookBurner')
+    return {success: true, message: 'Successfully booked burner.'}
+
 }

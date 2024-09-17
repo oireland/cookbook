@@ -5,6 +5,21 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export function addLeadingZeros(value: string, digits: number) {
+  if (value.length === digits) return value
+
+  const numberOfZerosToAdd = digits - value.length;
+  let zeros = ''
+  for (let i = 0; i < numberOfZerosToAdd; i++) {
+    zeros = zeros + '0'
+  }
+  return zeros + value;
+}
+
+export function getDisplayName(name: string, cookerName: string) {
+  return `${cookerName} - ${name}`
+}
+
 
 
 
