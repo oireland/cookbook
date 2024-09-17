@@ -20,16 +20,10 @@ import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
 import {PlusCircle, Trash2} from "lucide-react";
 import Image from "next/image";
-import {useTheme} from "next-themes";
-import BackButton from "@/components/back-button";
+import FormButtons from "@/components/form-buttons";
 
 
 function CreateCookerForm({kitchenId}: { kitchenId: string }) {
-
-    const {theme} = useTheme()
-
-    console.log(theme)
-
 
     const form = useForm<CreateCookerFormData>({
         resolver: zodResolver(CreateCookerFormSchema),
@@ -93,7 +87,7 @@ function CreateCookerForm({kitchenId}: { kitchenId: string }) {
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 max-w-2xl mx-auto ">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="max-w-2xl mx-auto ">
                 <Card>
                     <CardHeader>
                         <CardTitle>
@@ -225,9 +219,7 @@ function CreateCookerForm({kitchenId}: { kitchenId: string }) {
                                 <PlusCircle className="mr-2 h-4 w-4"/> Add Burner
                             </Button>
                         </div>
-                        <div className="flex justify-between w-full">
-                            <BackButton />
-                            <Button type="submit">Submit</Button></div>
+                        <FormButtons />
                     </CardContent>
                 </Card>
             </form>

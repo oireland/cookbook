@@ -5,7 +5,7 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
 }
 
@@ -25,23 +25,20 @@ model User {
   name          String?
   email         String    @unique
   image         String?
-  accounts Account[]
-  sessions Session[]
-
   emailVerified DateTime?
   role          Role      @default(MEMBER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
 
   kitchen   Kitchen?  @relation(fields: [kitchenId], references: [id], onDelete: SetNull)
   kitchenId String?
   bookings  Booking[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
-
+  accounts  Account[]
+  sessions  Session[]
 }
 
 model Account {
-  userId           String
+  userId            String
   type              String
   provider          String
   providerAccountId String
@@ -82,59 +79,59 @@ model VerificationToken {
 // Note: When adding the functionality for a user to leave a kitchen, check whether the kitchen will be empty after they leave, and delete it if this is the case.
 
 model Kitchen {
-  id String @id @default(cuid())
+  id        String @id @default(cuid())
   shortCode String @unique @db.VarChar(8)
-  name String
+  name      String
+
   cookers Cooker[]
-  users     User[]
+  users   User[]
 }
 
 model Oven {
-  id          String    @id @default(cuid())
+  id              String @id @default(cuid())
   name            String
   numberOfShelves Int
-  bookings OvenInBooking[]
+
+  bookings Booking[]
   cookerId String
-  cooker Cooker @relation(fields: [cookerId], references: [id], onDelete: Cascade)
-}
-
-model OvenInBooking {
-  oven Oven @relation(fields: [ovenId], references: [id], onDelete: Cascade)
-  ovenId    String
-  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  bookingId String
-
-  // allow an oven to be shared
-  numberOfShelves Int
-  ovenTemperature Int
-
-  @@id([ovenId, bookingId])
+  cooker   Cooker    @relation(fields: [cookerId], references: [id], onDelete: Cascade)
 }
 
 model Cooker {
-  id String @id @default(cuid())
+  id   String @id @default(cuid())
   name String
+
   kitchenId String
-  kitchen Kitchen @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
+  kitchen   Kitchen @relation(fields: [kitchenId], references: [id], onDelete: Cascade)
 
   burners Burner[]
-  ovens Oven[]
+  ovens   Oven[]
 }
 
 model Burner {
-  id String @id @default(cuid())
+  id   String @id @default(cuid())
   name String
+
   cookerId String
-  cooker Cooker @relation(fields: [cookerId], references: [id], onDelete: Cascade)
+  cooker   Cooker @relation(fields: [cookerId], references: [id], onDelete: Cascade)
+
   bookings Booking[]
 }
 
 model Booking {
-  id     String      @id @default(cuid())
-  userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  ovens OvenInBooking[]
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  oven   Oven?   @relation(fields: [ovenId], references: [id])
+  ovenId String?
+  numberOfShelves Int?
+  temperature Int?
+
+  burner   Burner? @relation(fields: [burnerId], references: [id])
+  burnerId String?
+
   startDateTime DateTime
   endDateTime   DateTime
-  burners         Burner[]
 }

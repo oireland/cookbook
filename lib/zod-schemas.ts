@@ -45,3 +45,21 @@ export const JoinKitchenFormSchema = z.object({
 })
 
 export type JoinKitchenFormData = z.infer<typeof JoinKitchenFormSchema>;
+
+export const BookOvenSchema = z.object({
+    ovenId: z.string().min(1, "Oven is required"),
+    numberOfShelves: z.coerce.number().min(1, "Number of shelves must be at least 1"),
+    temperature: z.coerce.number().min(1, "Temperature must be positive"),
+    startDateTime: z.date().min(new Date(), "Start Date and Time must be in the future."),
+    duration: z.number().min(1000 * 60, "Duration must be at least 1 minute")
+})
+
+export type BookOvenFormData = z.infer<typeof BookOvenSchema>;
+
+export const BookBurnerSchema = z.object({
+    burnerId: z.string().min(1, "Oven is required"),
+    startDateTime: z.date().min(new Date(), "Start Date and Time must be in the future."),
+    duration: z.number().min(1000 * 60, "Duration must be at least 1 minute")
+})
+
+export type BookBurnerFormData = z.infer<typeof BookBurnerSchema>;

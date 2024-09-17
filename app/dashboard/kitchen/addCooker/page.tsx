@@ -17,7 +17,7 @@ async function Page() {
 
 
     return (
-        <div className="p-6">
+        <div className="p-2">
             <CreateCookerForm kitchenId={session.user.kitchenId}/>
         </div>
     );
