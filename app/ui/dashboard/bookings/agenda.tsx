@@ -35,7 +35,7 @@ function Agenda({bookings}: { bookings: Booking[] }) { // will accept the bookin
     return (
         <div className="flex flex-col">
             <div
-                className="flex items-center justify-between sticky py-1 top-12 lg:top-16 bg-background w-full">
+                className="flex items-center justify-between sticky p-1 top-12 lg:top-16 bg-background w-full">
                 <div className="flex items-center space-x-1">
                     <DateTimePicker displayFormat={{hour24: 'PPP'}} granularity="day" value={startDate}
                                     onChange={(date) => changeDate(date)} yearRange={0}/>
