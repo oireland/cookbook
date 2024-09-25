@@ -3,7 +3,7 @@ import React from 'react';
 import {auth} from "@/lib/auth";
 import {redirect} from "next/navigation";
 import {getBookingDetails} from "@/lib/data";
-import BookingsCollapsible from "@/app/ui/dashboard/bookings/bookings-collapsible";
+import Agenda from "@/app/ui/dashboard/bookings/agenda";
 
 async function Page() {
 
@@ -17,15 +17,14 @@ async function Page() {
         redirect('/dashboard/kitchen')
     }
 
-    const bookingDetails = await getBookingDetails(session.user.kitchenId)
+    const bookings = await getBookingDetails(session.user.kitchenId)
 
-    if (!bookingDetails) {
+    if (!bookings) {
         return <div>No Bookings</div>
     }
 
     return (
-            <BookingsCollapsible bookingData={bookingDetails} startOpen={true} title="All Bookings"/>
-
+        <Agenda bookings={bookings}/>
     );
 }
 

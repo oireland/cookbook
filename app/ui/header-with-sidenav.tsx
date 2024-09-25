@@ -4,7 +4,7 @@ import {useEffect, useState} from "react"
 import Link from "next/link"
 import {usePathname} from "next/navigation"
 import {Button} from "@/components/ui/button"
-import {ChefHat, CalendarDays, LogOut, Menu, X, House} from "lucide-react"
+import {CalendarDays, ChefHat, House, LogOut, Menu, X} from "lucide-react"
 import Logo from "@/app/ui/logo";
 import {ModeToggle} from "@/components/mode-toggle";
 import {signOut, useSession} from "next-auth/react";
@@ -46,7 +46,7 @@ export default function HeaderWithSidebar({children}: { children: React.ReactNod
     return (
         <div className="flex flex-col min-h-screen">
             {/* Main Header */}
-            <header className="bg-background z-10 sticky top-0">
+            <header className="bg-background z-10 sticky top-0 left-0">
                 <div className="flex items-center justify-between px-4 h-12 lg:h-16 border-b">
                     <div className="flex items-center">
                         {showSidebar && (
@@ -111,7 +111,7 @@ export default function HeaderWithSidebar({children}: { children: React.ReactNod
                             <Button
                                 variant="outline"
                                 className="w-full flex items-center justify-center space-x-2"
-                                onClick={() => signOut({redirect: true,  callbackUrl: '/'})}
+                                onClick={() => signOut({redirect: true, callbackUrl: '/'})}
                             >
                                 <LogOut className="h-4 w-4"/>
                                 <span>Sign Out</span>

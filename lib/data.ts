@@ -63,9 +63,11 @@ export async function getOvenDetails(kitchenId: string) {
                 cooker: {
                     kitchen: {
                         id: kitchenId,
-                        users: {some: {
-                            id: session.user.id
-                            }}
+                        users: {
+                            some: {
+                                id: session.user.id
+                            }
+                        }
                     }
                 },
             },
@@ -134,10 +136,19 @@ export async function getBurnerDetails(kitchenId: string) {
 
 }
 
-export async function getBookingDetails(kitchenId: string){
+
+export type Booking = {
+    name: string;
+    description: string;
+    start: Date;
+    end: Date;
+    id: string;
+}
+
+export async function getBookingDetails(kitchenId: string): Promise<Booking[]> {
     const session = await auth()
 
-    if (!session || session.user.kitchenId !== kitchenId) return null;
+    if (!session || session.user.kitchenId !== kitchenId) return [];
 
     try {
         const bookings = await prisma.booking.findMany({
@@ -178,7 +189,8 @@ export async function getBookingDetails(kitchenId: string){
                             }
                         }
                     }
-                }
+                },
+                id: true,
             },
             orderBy: {
                 startDateTime: "asc",
@@ -186,21 +198,26 @@ export async function getBookingDetails(kitchenId: string){
         })
 
         if (bookings.length == 0) {
-            return null
+            return []
         }
 
-        return bookings.map(({user, oven, burner, numberOfShelves, temperature, startDateTime, endDateTime}) => ({
-            userName: user.name,
-            burnerName: burner?.name,
-            ovenName: oven?.name,
-            cookerName: burner?.cooker.name || oven?.cooker.name, //Will always be either an oven or a burner so will never actually be 'N/A'
-            temperature: temperature,
-            numberOfShelves: numberOfShelves,
-            start: startDateTime,
-            end: endDateTime
-        }));
+        return bookings.map(({user, oven, burner, numberOfShelves, temperature, startDateTime, endDateTime, id}) => {
+            let description = '';
+            if (oven) {
+                description = `${oven.cooker.name}, ${oven.name} - ${numberOfShelves} ${numberOfShelves! > 1 ? "shelves" : "shelf"} @${temperature}`
+            } else if (burner) {
+                description = `${burner.cooker.name}, ${burner.name}`
+            }
+            return ({
+                name: user.name!,
+                description: description,
+                start: startDateTime,
+                end: endDateTime,
+                id: id
+            });
+        });
     } catch (e) {
         console.log(e)
-        return null
+        return []
     }
 }
